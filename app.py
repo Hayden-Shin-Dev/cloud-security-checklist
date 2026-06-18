@@ -539,6 +539,9 @@ def render_checklist() -> None:
         options=CATEGORIES,
         default=list(CATEGORIES),
     )
+    if not selected_categories:
+        st.info("표시할 카테고리를 하나 이상 선택하세요.")
+        return
 
     for meta in CATEGORY_METADATA:
         if meta.name not in selected_categories:
