@@ -531,6 +531,19 @@ def render_category_table(selected_ids: list[str]) -> None:
     st.dataframe(pd.DataFrame(rows), hide_index=True, use_container_width=True)
 
 
+def render_category_chart(selected_ids: list[str]) -> None:
+    """Render a simple category score chart."""
+
+    category_scores = calculate_category_scores(selected_ids)
+    chart_df = pd.DataFrame(
+        {
+            "카테고리": list(category_scores.keys()),
+            "점수": [values["score"] for values in category_scores.values()],
+        }
+    ).set_index("카테고리")
+    st.bar_chart(chart_df, use_container_width=True)
+
+
 def render_checklist() -> None:
     """Render checklist controls grouped by category."""
 
@@ -660,6 +673,7 @@ def main() -> None:
             render_category_cards(selected_ids)
         with right_col:
             st.subheader("카테고리 점수 요약")
+            render_category_chart(selected_ids)
             render_category_table(selected_ids)
 
     with checklist_tab:
