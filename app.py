@@ -24,6 +24,7 @@ CLOUD_ENVIRONMENTS: tuple[str, ...] = ("Azure", "AWS", "GCP", "On-Premise")
 ASSESSMENT_SCOPES: tuple[str, ...] = ("운영 환경", "개발/검증 환경", "전사 공통", "신규 구축")
 RISK_APPETITES: tuple[str, ...] = ("보수적", "표준", "공격적")
 CHECKBOX_PREFIX = "security_check_"
+CREATOR_NAME = "Hayden Shin"
 
 RISK_STYLES: dict[str, dict[str, str]] = {
     "양호": {"bg": "#E8F5E9", "fg": "#1B5E20", "border": "#A5D6A7"},
@@ -81,6 +82,22 @@ def configure_page() -> None:
             line-height: 1.55;
             max-width: 980px;
             margin-bottom: 1rem;
+        }
+        .creator-line {
+            color: #374151;
+            font-size: 0.88rem;
+            font-weight: 650;
+            margin-bottom: 0.9rem;
+        }
+        .creator-line strong {
+            color: #111827;
+        }
+        .footer-notice {
+            border-top: 1px solid #E5E7EB;
+            color: #4B5563;
+            font-size: 0.84rem;
+            margin-top: 1.5rem;
+            padding-top: 0.9rem;
         }
         .status-strip {
             display: grid;
@@ -376,6 +393,10 @@ def render_header(metadata: dict[str, str | date]) -> None:
 
     st.markdown("<div class='dashboard-title'>Cloud Security Checklist</div>", unsafe_allow_html=True)
     st.markdown(
+        f"<div class='creator-line'>Created by <strong>{CREATOR_NAME}</strong> · Copyright (c) 2026 {CREATOR_NAME}</div>",
+        unsafe_allow_html=True,
+    )
+    st.markdown(
         """
         <div class='dashboard-subtitle'>
         클라우드 보안 통제의 적용 상태를 빠르게 점검하고, 경영진 보고에 필요한 점수,
@@ -407,6 +428,20 @@ def render_header(metadata: dict[str, str | date]) -> None:
                 <div class='strip-label'>Assessment Date</div>
                 <div class='strip-value'>{metadata['checked_date']}</div>
             </div>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+
+
+def render_footer() -> None:
+    """Render ownership notice at the bottom of the dashboard."""
+
+    st.markdown(
+        f"""
+        <div class='footer-notice'>
+        Cloud Security Checklist was created and maintained by <strong>{CREATOR_NAME}</strong>.
+        Copyright (c) 2026 {CREATOR_NAME}. See the project license for usage terms.
         </div>
         """,
         unsafe_allow_html=True,
@@ -729,6 +764,8 @@ def main() -> None:
     with export_tab:
         st.subheader("점검 결과 다운로드")
         render_export_panel(metadata=metadata, selected_ids=selected_ids, summary=summary)
+
+    render_footer()
 
 
 if __name__ == "__main__":
