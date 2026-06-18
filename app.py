@@ -54,24 +54,71 @@ def configure_page() -> None:
         """
         <style>
         :root {
+            color-scheme: light;
+            --app-bg: #F3F6FA;
+            --sidebar-bg: #F8FAFC;
+            --surface: #FFFFFF;
+            --surface-muted: #F8FAFC;
+            --surface-soft: #EEF4FF;
             --ink: #111827;
-            --muted: #6B7280;
-            --line: #D9DEE7;
-            --soft: #F6F8FB;
-            --panel: #FFFFFF;
-            --blue: #1D4ED8;
-            --teal: #0F766E;
+            --ink-strong: #0F172A;
+            --muted: #64748B;
+            --line: #D6DCE6;
+            --line-strong: #B8C2D2;
+            --brand: #1D4ED8;
+            --brand-strong: #1E3A8A;
+            --accent: #0F766E;
+            --success: #15803D;
+            --warning: #B45309;
+            --danger: #B91C1C;
+            --shadow: 0 12px 30px rgba(15, 23, 42, 0.08);
+            --card-shadow: 0 1px 2px rgba(15, 23, 42, 0.05);
+        }
+        @media (prefers-color-scheme: dark) {
+            :root {
+                color-scheme: dark;
+                --app-bg: #0B1020;
+                --sidebar-bg: #0F172A;
+                --surface: #111827;
+                --surface-muted: #162033;
+                --surface-soft: #172554;
+                --ink: #E5E7EB;
+                --ink-strong: #F8FAFC;
+                --muted: #A7B0C0;
+                --line: #263244;
+                --line-strong: #3A485F;
+                --brand: #60A5FA;
+                --brand-strong: #93C5FD;
+                --accent: #2DD4BF;
+                --success: #86EFAC;
+                --warning: #FBBF24;
+                --danger: #FCA5A5;
+                --shadow: 0 12px 34px rgba(0, 0, 0, 0.36);
+                --card-shadow: 0 1px 2px rgba(0, 0, 0, 0.28);
+            }
+        }
+        .stApp {
+            background: var(--app-bg);
+            color: var(--ink);
+        }
+        header[data-testid="stHeader"] {
+            background: transparent;
         }
         .block-container {
             padding: 1.35rem 1.8rem 2.5rem;
             max-width: 1440px;
         }
         section[data-testid="stSidebar"] {
-            background: #F8FAFC;
-            border-right: 1px solid #E5E7EB;
+            background: var(--sidebar-bg);
+            border-right: 1px solid var(--line);
+        }
+        section[data-testid="stSidebar"] [data-testid="stMarkdownContainer"],
+        section[data-testid="stSidebar"] label,
+        section[data-testid="stSidebar"] p {
+            color: var(--ink);
         }
         .dashboard-title {
-            color: var(--ink);
+            color: var(--ink-strong);
             font-size: 2.15rem;
             font-weight: 760;
             letter-spacing: 0;
@@ -85,17 +132,17 @@ def configure_page() -> None:
             margin-bottom: 1rem;
         }
         .creator-line {
-            color: #374151;
+            color: var(--muted);
             font-size: 0.88rem;
             font-weight: 650;
             margin-bottom: 0.9rem;
         }
         .creator-line strong {
-            color: #111827;
+            color: var(--ink-strong);
         }
         .footer-notice {
-            border-top: 1px solid #E5E7EB;
-            color: #4B5563;
+            border-top: 1px solid var(--line);
+            color: var(--muted);
             font-size: 0.84rem;
             margin-top: 1.5rem;
             padding-top: 0.9rem;
@@ -110,10 +157,10 @@ def configure_page() -> None:
         .metric-card,
         .insight-panel,
         .category-card {
-            background: var(--panel);
+            background: var(--surface);
             border: 1px solid var(--line);
             border-radius: 8px;
-            box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+            box-shadow: var(--card-shadow);
         }
         .strip-item {
             padding: 0.72rem 0.85rem;
@@ -126,7 +173,7 @@ def configure_page() -> None:
             margin-bottom: 0.15rem;
         }
         .strip-value {
-            color: var(--ink);
+            color: var(--ink-strong);
             font-size: 0.96rem;
             font-weight: 680;
             overflow-wrap: anywhere;
@@ -134,7 +181,7 @@ def configure_page() -> None:
         .metric-card {
             min-height: 142px;
             padding: 1rem;
-            border-top: 3px solid #1D4ED8;
+            border-top: 3px solid var(--brand);
         }
         .metric-label {
             color: var(--muted);
@@ -143,7 +190,7 @@ def configure_page() -> None:
             margin-bottom: 0.45rem;
         }
         .metric-value {
-            color: var(--ink);
+            color: var(--ink-strong);
             font-size: 2.35rem;
             font-weight: 780;
             line-height: 1;
@@ -175,7 +222,7 @@ def configure_page() -> None:
             margin: 0.7rem 0 1rem;
         }
         .insight-title {
-            color: var(--ink);
+            color: var(--ink-strong);
             font-size: 1rem;
             font-weight: 750;
             margin-bottom: 0.35rem;
@@ -197,7 +244,7 @@ def configure_page() -> None:
             margin-bottom: 0.45rem;
         }
         .category-name {
-            color: var(--ink);
+            color: var(--ink-strong);
             font-weight: 760;
             font-size: 0.96rem;
         }
@@ -207,7 +254,7 @@ def configure_page() -> None:
             margin-top: 0.15rem;
         }
         .category-score {
-            color: var(--blue);
+            color: var(--brand);
             font-size: 1.1rem;
             font-weight: 780;
             text-align: right;
@@ -218,18 +265,21 @@ def configure_page() -> None:
             line-height: 1.45;
         }
         div[data-testid="stProgress"] > div > div > div > div {
-            background-color: var(--blue);
+            background-color: var(--brand);
         }
         .stButton > button,
         .stDownloadButton > button {
             border-radius: 6px;
-            border: 1px solid #CBD5E1;
+            border: 1px solid var(--line-strong);
             font-weight: 680;
         }
         div[data-testid="stDataFrame"] {
-            border: 1px solid #E5E7EB;
+            border: 1px solid var(--line);
             border-radius: 8px;
             overflow: hidden;
+        }
+        div[data-testid="stDataFrame"] * {
+            color-scheme: light dark;
         }
         div[data-testid="stTabs"] button {
             font-weight: 700;
