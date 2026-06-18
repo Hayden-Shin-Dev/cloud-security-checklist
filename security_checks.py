@@ -89,6 +89,12 @@ CATEGORY_METADATA: tuple[CategoryMeta, ...] = (
 
 CATEGORIES: tuple[str, ...] = tuple(category.name for category in CATEGORY_METADATA)
 
+SEVERITY_RANK: dict[str, int] = {
+    "Critical": 3,
+    "High": 2,
+    "Medium": 1,
+}
+
 
 SECURITY_CHECKS: tuple[SecurityCheck, ...] = (
     SecurityCheck(
@@ -309,7 +315,11 @@ def generate_recommendations(selected_ids: Iterable[str]) -> list[Recommendation
         for check in SECURITY_CHECKS
         if check.id not in selected
     ]
-    return sorted(recommendations, key=lambda item: item["weight"], reverse=True)
+    return sorted(
+        recommendations,
+        key=lambda item: (SEVERITY_RANK[item["severity"]], item["weight"]),
+        reverse=True,
+    )
 
 
 def build_assessment_summary(selected_ids: Iterable[str]) -> AssessmentSummary:
