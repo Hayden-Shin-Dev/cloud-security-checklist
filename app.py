@@ -10,27 +10,34 @@ import streamlit as st
 
 from security_checks import (
     CATEGORIES,
+    CATEGORY_METADATA,
     SECURITY_CHECKS,
+    build_assessment_summary,
     calculate_category_scores,
-    calculate_score,
     generate_recommendations,
-    get_risk_level,
 )
 
 
 CLOUD_ENVIRONMENTS: tuple[str, ...] = ("Azure", "AWS", "GCP", "On-Premise")
+ASSESSMENT_SCOPES: tuple[str, ...] = ("운영 환경", "개발/검증 환경", "전사 공통", "신규 구축")
 CHECKBOX_PREFIX = "security_check_"
 
-RISK_BADGE_STYLES: dict[str, dict[str, str]] = {
-    "양호": {"background": "#E8F5E9", "color": "#1B5E20", "border": "#A5D6A7"},
-    "주의": {"background": "#FFF8E1", "color": "#7A4F01", "border": "#FFE082"},
-    "위험": {"background": "#FFF3E0", "color": "#8A3B00", "border": "#FFCC80"},
-    "매우 위험": {"background": "#FFEBEE", "color": "#8B1A1A", "border": "#EF9A9A"},
+RISK_STYLES: dict[str, dict[str, str]] = {
+    "양호": {"bg": "#E8F5E9", "fg": "#1B5E20", "border": "#A5D6A7"},
+    "주의": {"bg": "#FFF8E1", "fg": "#7A4F01", "border": "#FFE082"},
+    "위험": {"bg": "#FFF3E0", "fg": "#8A3B00", "border": "#FFB74D"},
+    "매우 위험": {"bg": "#FFEBEE", "fg": "#8B1A1A", "border": "#EF9A9A"},
+}
+
+SEVERITY_STYLES: dict[str, dict[str, str]] = {
+    "Critical": {"bg": "#FEE2E2", "fg": "#991B1B"},
+    "High": {"bg": "#FFEDD5", "fg": "#9A3412"},
+    "Medium": {"bg": "#FEF3C7", "fg": "#92400E"},
 }
 
 
 def configure_page() -> None:
-    """Configure the Streamlit page and dashboard styles."""
+    """Configure the page and inject dashboard styles."""
 
     st.set_page_config(
         page_title="Cloud Security Checklist",
@@ -41,50 +48,181 @@ def configure_page() -> None:
     st.markdown(
         """
         <style>
+        :root {
+            --ink: #111827;
+            --muted: #6B7280;
+            --line: #D9DEE7;
+            --soft: #F6F8FB;
+            --panel: #FFFFFF;
+            --blue: #1D4ED8;
+            --teal: #0F766E;
+        }
         .block-container {
-            padding-top: 2rem;
-            padding-bottom: 2.5rem;
+            padding: 1.35rem 1.8rem 2.5rem;
+            max-width: 1440px;
         }
-        .app-subtitle {
-            color: #4B5563;
-            font-size: 1rem;
-            line-height: 1.6;
-            margin-bottom: 1.5rem;
-            max-width: 980px;
+        section[data-testid="stSidebar"] {
+            background: #F8FAFC;
+            border-right: 1px solid #E5E7EB;
         }
-        .score-panel {
-            border: 1px solid #D1D5DB;
-            border-radius: 8px;
-            padding: 1rem 1.1rem;
-            background: #FFFFFF;
-            min-height: 128px;
-        }
-        .score-label {
-            color: #6B7280;
-            font-size: 0.82rem;
-            font-weight: 600;
-            margin-bottom: 0.3rem;
-        }
-        .score-value {
-            color: #111827;
-            font-size: 2.6rem;
+        .dashboard-title {
+            color: var(--ink);
+            font-size: 2.15rem;
             font-weight: 760;
+            letter-spacing: 0;
+            margin-bottom: 0.25rem;
+        }
+        .dashboard-subtitle {
+            color: var(--muted);
+            font-size: 0.98rem;
+            line-height: 1.55;
+            max-width: 980px;
+            margin-bottom: 1rem;
+        }
+        .status-strip {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 0.7rem;
+            margin: 1rem 0 1.2rem;
+        }
+        .strip-item,
+        .metric-card,
+        .insight-panel,
+        .category-card {
+            background: var(--panel);
+            border: 1px solid var(--line);
+            border-radius: 8px;
+            box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+        }
+        .strip-item {
+            padding: 0.72rem 0.85rem;
+        }
+        .strip-label {
+            color: var(--muted);
+            font-size: 0.76rem;
+            font-weight: 680;
+            text-transform: uppercase;
+            margin-bottom: 0.15rem;
+        }
+        .strip-value {
+            color: var(--ink);
+            font-size: 0.96rem;
+            font-weight: 680;
+            overflow-wrap: anywhere;
+        }
+        .metric-card {
+            min-height: 142px;
+            padding: 1rem;
+        }
+        .metric-label {
+            color: var(--muted);
+            font-size: 0.82rem;
+            font-weight: 700;
+            margin-bottom: 0.45rem;
+        }
+        .metric-value {
+            color: var(--ink);
+            font-size: 2.35rem;
+            font-weight: 780;
             line-height: 1;
         }
-        .risk-badge {
-            display: inline-block;
-            border-radius: 6px;
-            border: 1px solid;
-            padding: 0.4rem 0.65rem;
-            font-weight: 700;
-            margin-top: 0.45rem;
+        .metric-help {
+            color: var(--muted);
+            font-size: 0.82rem;
+            margin-top: 0.5rem;
         }
-        .section-note {
-            color: #6B7280;
+        .risk-badge,
+        .severity-badge {
+            display: inline-flex;
+            align-items: center;
+            border-radius: 6px;
+            font-weight: 760;
+            white-space: nowrap;
+        }
+        .risk-badge {
+            border: 1px solid;
+            padding: 0.45rem 0.7rem;
+            font-size: 1.05rem;
+        }
+        .severity-badge {
+            padding: 0.22rem 0.48rem;
+            font-size: 0.72rem;
+        }
+        .insight-panel {
+            padding: 1rem;
+            margin: 0.7rem 0 1rem;
+        }
+        .insight-title {
+            color: var(--ink);
+            font-size: 1rem;
+            font-weight: 750;
+            margin-bottom: 0.35rem;
+        }
+        .insight-copy {
+            color: var(--muted);
             font-size: 0.92rem;
+            line-height: 1.55;
+        }
+        .category-card {
+            padding: 0.9rem;
+            margin-bottom: 0.75rem;
+        }
+        .category-head {
+            display: flex;
+            justify-content: space-between;
+            gap: 0.8rem;
+            align-items: flex-start;
+            margin-bottom: 0.45rem;
+        }
+        .category-name {
+            color: var(--ink);
+            font-weight: 760;
+            font-size: 0.96rem;
+        }
+        .category-owner {
+            color: var(--muted);
+            font-size: 0.76rem;
+            margin-top: 0.15rem;
+        }
+        .category-score {
+            color: var(--blue);
+            font-size: 1.1rem;
+            font-weight: 780;
+            text-align: right;
+        }
+        .small-muted {
+            color: var(--muted);
+            font-size: 0.86rem;
+            line-height: 1.45;
         }
         div[data-testid="stProgress"] > div > div > div > div {
-            background-color: #2563EB;
+            background-color: var(--blue);
+        }
+        .stButton > button,
+        .stDownloadButton > button {
+            border-radius: 6px;
+            border: 1px solid #CBD5E1;
+            font-weight: 680;
+        }
+        @media (max-width: 900px) {
+            .block-container {
+                padding-left: 1rem;
+                padding-right: 1rem;
+            }
+            .status-strip {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+            .metric-value {
+                font-size: 2rem;
+            }
+        }
+        @media (max-width: 560px) {
+            .status-strip {
+                grid-template-columns: 1fr;
+            }
+            .dashboard-title {
+                font-size: 1.7rem;
+            }
         }
         </style>
         """,
@@ -93,7 +231,7 @@ def configure_page() -> None:
 
 
 def initialize_check_state() -> None:
-    """Create default checkbox session state values."""
+    """Create default checkbox values in session state."""
 
     for check in SECURITY_CHECKS:
         st.session_state.setdefault(f"{CHECKBOX_PREFIX}{check.id}", False)
@@ -107,7 +245,7 @@ def set_all_checks(value: bool) -> None:
 
 
 def get_selected_check_ids() -> list[str]:
-    """Return the IDs of checklist items currently selected by the user."""
+    """Return IDs for the checklist items selected by the user."""
 
     return [
         check.id
@@ -116,16 +254,62 @@ def get_selected_check_ids() -> list[str]:
     ]
 
 
+def render_badge(text: str, style: dict[str, str], *, class_name: str) -> str:
+    """Return a small HTML badge with inline colors."""
+
+    border = style.get("border", style["bg"])
+    return (
+        f"<span class='{class_name}' "
+        f"style='background:{style['bg']};color:{style['fg']};border-color:{border};'>"
+        f"{text}</span>"
+    )
+
+
+def render_sidebar() -> dict[str, str | date]:
+    """Render assessment controls and return metadata."""
+
+    with st.sidebar:
+        st.header("Assessment Setup")
+        organization_name = st.text_input(
+            "회사명 또는 프로젝트명",
+            placeholder="예: ABC Cloud Migration",
+        ).strip()
+        assessor_name = st.text_input(
+            "점검 담당자",
+            placeholder="예: Cloud Security Team",
+        ).strip()
+        cloud_environment = st.selectbox("클라우드 환경", CLOUD_ENVIRONMENTS)
+        assessment_scope = st.selectbox("점검 범위", ASSESSMENT_SCOPES)
+        checked_date = date.today()
+        st.caption(f"점검일: {checked_date.isoformat()}")
+
+        st.divider()
+        st.subheader("Bulk Actions")
+        select_col, reset_col = st.columns(2)
+        with select_col:
+            if st.button("전체 선택", use_container_width=True):
+                set_all_checks(True)
+        with reset_col:
+            if st.button("초기화", use_container_width=True):
+                set_all_checks(False)
+
+    return {
+        "organization_name": organization_name or "미입력",
+        "assessor_name": assessor_name or "미입력",
+        "cloud_environment": cloud_environment,
+        "assessment_scope": assessment_scope,
+        "checked_date": checked_date,
+    }
+
+
 def build_export_dataframe(
     *,
-    organization_name: str,
-    cloud_environment: str,
-    checked_date: date,
+    metadata: dict[str, str | date],
     selected_ids: list[str],
-    total_score: int,
+    score: int,
     risk_level: str,
 ) -> pd.DataFrame:
-    """Build a CSV-friendly DataFrame containing the assessment result."""
+    """Build a CSV-friendly assessment result table."""
 
     selected = set(selected_ids)
     rows: list[dict[str, Any]] = []
@@ -134,16 +318,20 @@ def build_export_dataframe(
         is_checked = check.id in selected
         rows.append(
             {
-                "점검일": checked_date.isoformat(),
-                "회사명 또는 프로젝트명": organization_name,
-                "클라우드 환경": cloud_environment,
+                "점검일": metadata["checked_date"],
+                "회사명 또는 프로젝트명": metadata["organization_name"],
+                "점검 담당자": metadata["assessor_name"],
+                "클라우드 환경": metadata["cloud_environment"],
+                "점검 범위": metadata["assessment_scope"],
                 "카테고리": check.category,
+                "심각도": check.severity,
                 "점검 항목": check.title,
                 "적용 여부": "Y" if is_checked else "N",
                 "가중치": check.weight,
                 "획득 점수": check.weight if is_checked else 0,
+                "증적 힌트": check.evidence_hint,
                 "개선 권고사항": "" if is_checked else check.recommendation,
-                "총 보안 점수": total_score,
+                "총 보안 점수": score,
                 "위험 등급": risk_level,
             }
         )
@@ -151,214 +339,293 @@ def build_export_dataframe(
     return pd.DataFrame(rows)
 
 
-def render_sidebar() -> tuple[str, str, date]:
-    """Render sidebar controls and return assessment metadata."""
+def render_header(metadata: dict[str, str | date]) -> None:
+    """Render dashboard title and assessment metadata strip."""
 
-    with st.sidebar:
-        st.header("점검 정보")
-        cloud_environment = st.selectbox("클라우드 환경", CLOUD_ENVIRONMENTS)
-        organization_name = st.text_input(
-            "회사명 또는 프로젝트명",
-            placeholder="예: ABC Cloud Migration",
-        ).strip()
-        checked_date = date.today()
-        st.caption(f"점검일: {checked_date.isoformat()}")
+    st.markdown("<div class='dashboard-title'>Cloud Security Checklist</div>", unsafe_allow_html=True)
+    st.markdown(
+        """
+        <div class='dashboard-subtitle'>
+        클라우드 보안 통제의 적용 상태를 빠르게 점검하고, 경영진 보고에 필요한 점수,
+        위험 등급, 우선 개선 항목을 한 화면에서 확인합니다.
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+    st.markdown(
+        f"""
+        <div class='status-strip'>
+            <div class='strip-item'>
+                <div class='strip-label'>Organization</div>
+                <div class='strip-value'>{metadata['organization_name']}</div>
+            </div>
+            <div class='strip-item'>
+                <div class='strip-label'>Environment</div>
+                <div class='strip-value'>{metadata['cloud_environment']}</div>
+            </div>
+            <div class='strip-item'>
+                <div class='strip-label'>Scope</div>
+                <div class='strip-value'>{metadata['assessment_scope']}</div>
+            </div>
+            <div class='strip-item'>
+                <div class='strip-label'>Assessment Date</div>
+                <div class='strip-value'>{metadata['checked_date']}</div>
+            </div>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
 
-        st.divider()
-        st.subheader("체크리스트 제어")
-        select_col, reset_col = st.columns(2)
-        with select_col:
-            if st.button("모든 항목 선택", use_container_width=True):
-                set_all_checks(True)
-        with reset_col:
-            if st.button("선택 초기화", use_container_width=True):
-                set_all_checks(False)
 
-    return organization_name, cloud_environment, checked_date
+def render_score_cards(summary: dict[str, int | str]) -> None:
+    """Render executive KPI cards."""
 
+    risk_level = str(summary["risk_level"])
+    risk_badge = render_badge(risk_level, RISK_STYLES[risk_level], class_name="risk-badge")
+    completion = round((int(summary["checked_count"]) / int(summary["total_count"])) * 100)
 
-def render_score_summary(score: int, risk_level: str, unchecked_count: int) -> None:
-    """Render the top-level score, risk level, and unchecked count."""
-
-    style = RISK_BADGE_STYLES[risk_level]
-    score_col, risk_col, issue_col = st.columns(3)
-
+    score_col, risk_col, gap_col, critical_col = st.columns(4)
     with score_col:
         st.markdown(
             f"""
-            <div class="score-panel">
-                <div class="score-label">총 보안 점수</div>
-                <div class="score-value">{score}<span style="font-size:1rem;color:#6B7280;"> / 100</span></div>
+            <div class='metric-card'>
+                <div class='metric-label'>Security Score</div>
+                <div class='metric-value'>{summary['score']}<span style='font-size:1rem;color:#6B7280;'> / 100</span></div>
+                <div class='metric-help'>가중치 기반 총점</div>
             </div>
             """,
             unsafe_allow_html=True,
         )
-
     with risk_col:
         st.markdown(
             f"""
-            <div class="score-panel">
-                <div class="score-label">위험 등급</div>
-                <div class="risk-badge" style="background:{style['background']};color:{style['color']};border-color:{style['border']};">
-                    {risk_level}
-                </div>
+            <div class='metric-card'>
+                <div class='metric-label'>Risk Rating</div>
+                {risk_badge}
+                <div class='metric-help'>점수 구간 기준 자동 산정</div>
             </div>
             """,
             unsafe_allow_html=True,
         )
-
-    with issue_col:
+    with gap_col:
         st.markdown(
             f"""
-            <div class="score-panel">
-                <div class="score-label">주요 위험 요소</div>
-                <div class="score-value">{unchecked_count}</div>
+            <div class='metric-card'>
+                <div class='metric-label'>Open Gaps</div>
+                <div class='metric-value'>{summary['unchecked_count']}</div>
+                <div class='metric-help'>미충족 통제 항목</div>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+    with critical_col:
+        st.markdown(
+            f"""
+            <div class='metric-card'>
+                <div class='metric-label'>Critical Gaps</div>
+                <div class='metric-value'>{summary['critical_unchecked_count']}</div>
+                <div class='metric-help'>우선 조치 대상</div>
             </div>
             """,
             unsafe_allow_html=True,
         )
 
-    st.progress(score / 100)
+    st.progress(int(summary["score"]) / 100)
+    st.caption(f"통제 적용률 {completion}% | {summary['checked_count']} / {summary['total_count']} 항목 충족")
+
+
+def render_executive_note(summary: dict[str, int | str]) -> None:
+    """Render a concise executive interpretation."""
+
+    score = int(summary["score"])
+    risk_level = str(summary["risk_level"])
+    if score >= 80:
+        message = "핵심 보안 통제가 대체로 적용되어 있습니다. 남은 개선 항목은 정기 운영 과제로 관리하세요."
+    elif score >= 60:
+        message = "주요 통제 일부가 미흡합니다. 외부 노출과 관리자 접근 관련 항목을 우선 검토하세요."
+    elif score >= 40:
+        message = "여러 핵심 통제가 부족합니다. 네트워크 노출, MFA, 로깅 정책을 단기 개선 과제로 지정하세요."
+    else:
+        message = "기본 보안 통제 부재 가능성이 높습니다. 즉시 접근 통제와 외부 노출 차단부터 조치해야 합니다."
+
+    st.markdown(
+        f"""
+        <div class='insight-panel'>
+            <div class='insight-title'>Executive Summary | {risk_level}</div>
+            <div class='insight-copy'>{message}</div>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+
+
+def render_category_cards(selected_ids: list[str]) -> None:
+    """Render category score cards with progress bars."""
+
+    category_scores = calculate_category_scores(selected_ids)
+    for meta in CATEGORY_METADATA:
+        values = category_scores[meta.name]
+        st.markdown(
+            f"""
+            <div class='category-card'>
+                <div class='category-head'>
+                    <div>
+                        <div class='category-name'>{meta.name}</div>
+                        <div class='category-owner'>{meta.owner}</div>
+                    </div>
+                    <div>
+                        <div class='category-score'>{values['score']}점</div>
+                        <div class='small-muted'>{values['status']}</div>
+                    </div>
+                </div>
+                <div class='small-muted'>{meta.description}</div>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+        st.progress(values["score"] / 100)
+
+
+def render_category_table(selected_ids: list[str]) -> None:
+    """Render category scores in a compact table."""
+
+    rows = []
+    category_scores = calculate_category_scores(selected_ids)
+    for meta in CATEGORY_METADATA:
+        values = category_scores[meta.name]
+        rows.append(
+            {
+                "카테고리": meta.name,
+                "담당 영역": meta.owner,
+                "획득 점수": values["earned"],
+                "총 가중치": values["total"],
+                "점수": values["score"],
+                "상태": values["status"],
+            }
+        )
+    st.dataframe(pd.DataFrame(rows), hide_index=True, use_container_width=True)
 
 
 def render_checklist() -> None:
-    """Render checklist items grouped by security category."""
+    """Render checklist controls grouped by category."""
 
-    st.subheader("보안 체크리스트")
-    for category in CATEGORIES:
-        with st.expander(category, expanded=True):
-            for check in [item for item in SECURITY_CHECKS if item.category == category]:
-                st.checkbox(
-                    check.title,
-                    key=f"{CHECKBOX_PREFIX}{check.id}",
-                    help=f"가중치: {check.weight}점",
-                )
-
-
-def render_category_scores(selected_ids: list[str]) -> None:
-    """Render category score progress bars and a tabular summary."""
-
-    st.subheader("카테고리별 점수")
-    category_scores = calculate_category_scores(selected_ids)
-
-    for category, values in category_scores.items():
-        label_col, value_col = st.columns([3, 1])
-        with label_col:
-            st.write(category)
-            st.progress(values["score"] / 100)
-        with value_col:
-            st.metric("점수", f"{values['score']}점", f"{values['earned']}/{values['total']}")
-
-    score_rows = [
-        {
-            "카테고리": category,
-            "획득 점수": values["earned"],
-            "총 가중치": values["total"],
-            "점수": f"{values['score']}점",
-        }
-        for category, values in category_scores.items()
-    ]
-    st.dataframe(pd.DataFrame(score_rows), hide_index=True, use_container_width=True)
+    for meta in CATEGORY_METADATA:
+        with st.expander(f"{meta.name} | {meta.owner}", expanded=True):
+            st.caption(meta.description)
+            checks = [check for check in SECURITY_CHECKS if check.category == meta.name]
+            for check in checks:
+                label_col, info_col = st.columns([4, 1])
+                with label_col:
+                    st.checkbox(
+                        check.title,
+                        key=f"{CHECKBOX_PREFIX}{check.id}",
+                        help=check.evidence_hint,
+                    )
+                with info_col:
+                    severity_badge = render_badge(
+                        check.severity,
+                        SEVERITY_STYLES[check.severity],
+                        class_name="severity-badge",
+                    )
+                    st.markdown(severity_badge, unsafe_allow_html=True)
+                    st.caption(f"{check.weight}점")
 
 
-def render_recommendations(selected_ids: list[str]) -> None:
-    """Render risks and remediation guidance for unchecked items."""
+def render_risk_register(selected_ids: list[str]) -> None:
+    """Render unchecked controls and recommendations."""
 
     recommendations = generate_recommendations(selected_ids)
-    st.subheader("주요 위험 요소 및 개선 권고사항")
-
     if not recommendations:
-        st.success("모든 보안 항목이 충족되었습니다. 현재 통제 수준을 유지하고 정기 점검을 계속 수행하세요.")
+        st.success("미충족 항목이 없습니다. 현재 통제 수준을 유지하고 정기 점검 주기를 운영하세요.")
         return
 
-    st.markdown(
-        f"<p class='section-note'>미충족 항목 {len(recommendations)}개를 우선순위에 따라 개선하세요.</p>",
-        unsafe_allow_html=True,
-    )
-    for recommendation in recommendations:
-        with st.expander(
-            f"{recommendation['category']} | {recommendation['item']} ({recommendation['weight']}점)",
-            expanded=False,
-        ):
-            st.write(recommendation["recommendation"])
+    rows = [
+        {
+            "우선순위": index,
+            "카테고리": item["category"],
+            "심각도": item["severity"],
+            "가중치": item["weight"],
+            "위험 요소": item["item"],
+            "권고사항": item["recommendation"],
+            "증적 힌트": item["evidence_hint"],
+        }
+        for index, item in enumerate(recommendations, start=1)
+    ]
+    st.dataframe(pd.DataFrame(rows), hide_index=True, use_container_width=True)
+
+    st.subheader("우선 조치 항목")
+    for item in recommendations[:5]:
+        with st.expander(f"{item['severity']} | {item['item']}", expanded=False):
+            st.write(item["recommendation"])
+            st.caption(f"확인 증적: {item['evidence_hint']}")
 
 
-def render_download(
+def render_export_panel(
     *,
-    organization_name: str,
-    cloud_environment: str,
-    checked_date: date,
+    metadata: dict[str, str | date],
     selected_ids: list[str],
-    total_score: int,
-    risk_level: str,
+    summary: dict[str, int | str],
 ) -> None:
-    """Render the CSV download button for the current assessment."""
+    """Render export preview and CSV download button."""
 
-    export_name = organization_name if organization_name else "미입력"
     export_df = build_export_dataframe(
-        organization_name=export_name,
-        cloud_environment=cloud_environment,
-        checked_date=checked_date,
+        metadata=metadata,
         selected_ids=selected_ids,
-        total_score=total_score,
-        risk_level=risk_level,
+        score=int(summary["score"]),
+        risk_level=str(summary["risk_level"]),
     )
+    st.dataframe(export_df, hide_index=True, use_container_width=True)
+
+    checked_date = metadata["checked_date"]
+    environment = str(metadata["cloud_environment"]).lower().replace("-", "_")
     csv_data = export_df.to_csv(index=False).encode("utf-8-sig")
-    file_date = checked_date.strftime("%Y%m%d")
 
     st.download_button(
-        label="점검 결과 CSV 다운로드",
+        label="CSV 다운로드",
         data=csv_data,
-        file_name=f"cloud_security_checklist_{file_date}.csv",
+        file_name=f"cloud_security_checklist_{environment}_{checked_date}.csv",
         mime="text/csv",
         use_container_width=True,
     )
 
 
 def main() -> None:
-    """Run the Cloud Security Checklist Streamlit app."""
+    """Run the Cloud Security Checklist app."""
 
     configure_page()
     initialize_check_state()
-    organization_name, cloud_environment, checked_date = render_sidebar()
-
-    st.title("Cloud Security Checklist")
-    st.markdown(
-        """
-        <p class="app-subtitle">
-        클라우드 환경의 핵심 보안 설정을 빠르게 점검하고, 점수와 위험 등급,
-        카테고리별 취약 영역, 구체적인 개선 권고사항을 확인하는 보안 컨설팅 대시보드입니다.
-        </p>
-        """,
-        unsafe_allow_html=True,
-    )
-
+    metadata = render_sidebar()
     selected_ids = get_selected_check_ids()
-    total_score = calculate_score(selected_ids)
-    risk_level = get_risk_level(total_score)
-    unchecked_count = len(SECURITY_CHECKS) - len(selected_ids)
+    summary = build_assessment_summary(selected_ids)
 
-    render_score_summary(total_score, risk_level, unchecked_count)
+    render_header(metadata)
+    render_score_cards(summary)
+    render_executive_note(summary)
 
-    st.divider()
-    render_checklist()
-
-    st.divider()
-    left_col, right_col = st.columns([1, 1])
-    with left_col:
-        render_category_scores(selected_ids)
-    with right_col:
-        render_recommendations(selected_ids)
-
-    st.divider()
-    render_download(
-        organization_name=organization_name,
-        cloud_environment=cloud_environment,
-        checked_date=checked_date,
-        selected_ids=selected_ids,
-        total_score=total_score,
-        risk_level=risk_level,
+    overview_tab, checklist_tab, risk_tab, export_tab = st.tabs(
+        ["Overview", "Checklist", "Risk Register", "Export"]
     )
+
+    with overview_tab:
+        left_col, right_col = st.columns([1.05, 1])
+        with left_col:
+            st.subheader("카테고리별 보안 성숙도")
+            render_category_cards(selected_ids)
+        with right_col:
+            st.subheader("카테고리 점수 요약")
+            render_category_table(selected_ids)
+
+    with checklist_tab:
+        st.subheader("보안 체크리스트")
+        render_checklist()
+
+    with risk_tab:
+        st.subheader("주요 위험 요소 및 개선 권고사항")
+        render_risk_register(selected_ids)
+
+    with export_tab:
+        st.subheader("점검 결과 다운로드")
+        render_export_panel(metadata=metadata, selected_ids=selected_ids, summary=summary)
 
 
 if __name__ == "__main__":
