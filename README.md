@@ -151,6 +151,15 @@ cloud-security-checklist/
 8. CSV 다운로드 파일에 점검일, 회사명, 담당자, 환경, 범위, 점수, 위험 등급이 포함되는지 확인합니다.
 9. 좁은 브라우저 폭에서도 KPI 카드와 탭 레이아웃이 크게 깨지지 않는지 확인합니다.
 
+## 빠른 검증 명령
+
+아래 명령으로 핵심 모듈 import와 점수 계산을 빠르게 확인할 수 있습니다.
+
+```bash
+python -B -c "from security_checks import SECURITY_CHECKS, build_assessment_summary; ids=[c.id for c in SECURITY_CHECKS]; assert build_assessment_summary(ids)['score'] == 100"
+python -B -c "import app"
+```
+
 ## 운영 활용 예시
 
 - 신규 클라우드 프로젝트 착수 전 기본 통제 사전 점검
