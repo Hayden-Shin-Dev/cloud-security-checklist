@@ -14,6 +14,7 @@ from security_checks import (
     SECURITY_CHECKS,
     build_assessment_summary,
     calculate_category_scores,
+    calculate_severity_breakdown,
     generate_recommendations,
 )
 
@@ -544,6 +545,23 @@ def render_category_chart(selected_ids: list[str]) -> None:
     st.bar_chart(chart_df, use_container_width=True)
 
 
+def render_severity_breakdown(selected_ids: list[str]) -> None:
+    """Render selected and missing controls by severity."""
+
+    rows = []
+    breakdown = calculate_severity_breakdown(selected_ids)
+    for severity, values in breakdown.items():
+        rows.append(
+            {
+                "심각도": severity,
+                "충족": values["selected"],
+                "미충족": values["missing"],
+                "전체": values["total"],
+            }
+        )
+    st.dataframe(pd.DataFrame(rows), hide_index=True, use_container_width=True)
+
+
 def render_checklist() -> None:
     """Render checklist controls grouped by category."""
 
@@ -692,6 +710,8 @@ def main() -> None:
             st.subheader("카테고리 점수 요약")
             render_category_chart(selected_ids)
             render_category_table(selected_ids)
+            st.subheader("심각도별 통제 현황")
+            render_severity_breakdown(selected_ids)
 
     with checklist_tab:
         st.subheader("보안 체크리스트")
