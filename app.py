@@ -56,17 +56,23 @@ def configure_page() -> None:
         <style>
         :root {
             color-scheme: light;
-            --app-bg: #F3F6FA;
-            --sidebar-bg: #F8FAFC;
-            --surface: #FFFFFF;
+            --app-bg-default: #F3F6FA;
+            --sidebar-bg-default: #F8FAFC;
+            --surface-default: #FFFFFF;
+            --ink-default: #111827;
+            --ink-strong-default: #0F172A;
+            --brand-default: #1D4ED8;
+            --app-bg: var(--app-bg-default);
+            --sidebar-bg: var(--sidebar-bg-default);
+            --surface: var(--surface-default);
             --surface-muted: #F8FAFC;
             --surface-soft: #EEF4FF;
-            --ink: #111827;
-            --ink-strong: #0F172A;
+            --ink: var(--ink-default);
+            --ink-strong: var(--ink-strong-default);
             --muted: #64748B;
             --line: #D6DCE6;
             --line-strong: #B8C2D2;
-            --brand: #1D4ED8;
+            --brand: var(--brand-default);
             --brand-strong: #1E3A8A;
             --accent: #0F766E;
             --success: #15803D;
@@ -78,17 +84,17 @@ def configure_page() -> None:
         @media (prefers-color-scheme: dark) {
             :root {
                 color-scheme: dark;
-                --app-bg: #0B1020;
-                --sidebar-bg: #0F172A;
-                --surface: #111827;
+                --app-bg-default: #0B1020;
+                --sidebar-bg-default: #0F172A;
+                --surface-default: #111827;
                 --surface-muted: #162033;
                 --surface-soft: #172554;
-                --ink: #E5E7EB;
-                --ink-strong: #F8FAFC;
+                --ink-default: #E5E7EB;
+                --ink-strong-default: #F8FAFC;
                 --muted: #A7B0C0;
                 --line: #263244;
                 --line-strong: #3A485F;
-                --brand: #60A5FA;
+                --brand-default: #60A5FA;
                 --brand-strong: #93C5FD;
                 --accent: #2DD4BF;
                 --success: #86EFAC;
@@ -99,6 +105,17 @@ def configure_page() -> None:
             }
         }
         .stApp {
+            --app-bg: var(--background-color, var(--app-bg-default));
+            --sidebar-bg: var(--secondary-background-color, var(--sidebar-bg-default));
+            --surface: var(--secondary-background-color, var(--surface-default));
+            --surface-muted: color-mix(in srgb, var(--surface) 86%, var(--ink) 14%);
+            --surface-soft: color-mix(in srgb, var(--brand) 16%, var(--surface) 84%);
+            --ink: var(--text-color, var(--ink-default));
+            --ink-strong: var(--text-color, var(--ink-strong-default));
+            --muted: color-mix(in srgb, var(--ink) 64%, var(--surface) 36%);
+            --line: color-mix(in srgb, var(--ink) 18%, var(--surface) 82%);
+            --line-strong: color-mix(in srgb, var(--ink) 28%, var(--surface) 72%);
+            --brand: var(--primary-color, var(--brand-default));
             background: var(--app-bg);
             color: var(--ink);
         }
