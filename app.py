@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from datetime import date
+from html import escape
 from typing import Any
 
 import pandas as pd
@@ -424,6 +425,12 @@ def render_badge(text: str, style: dict[str, str], *, class_name: str) -> str:
     )
 
 
+def safe_html(value: object) -> str:
+    """Escape a value before inserting it into an HTML snippet."""
+
+    return escape(str(value), quote=True)
+
+
 def build_export_filename(metadata: dict[str, str | date]) -> str:
     """Build a stable CSV filename from the assessment metadata."""
 
@@ -521,6 +528,12 @@ def build_export_dataframe(
 def render_header(metadata: dict[str, str | date]) -> None:
     """Render dashboard title and assessment metadata strip."""
 
+    organization = safe_html(metadata["organization_name"])
+    environment = safe_html(metadata["cloud_environment"])
+    scope = safe_html(metadata["assessment_scope"])
+    risk_appetite = safe_html(metadata["risk_appetite"])
+    checked_date = safe_html(metadata["checked_date"])
+
     st.markdown(
         f"""
         <div class='dashboard-header'>
@@ -540,23 +553,23 @@ def render_header(metadata: dict[str, str | date]) -> None:
             <div class='status-strip'>
                 <div class='strip-item'>
                     <div class='strip-label'>Organization</div>
-                    <div class='strip-value'>{metadata['organization_name']}</div>
+                    <div class='strip-value'>{organization}</div>
                 </div>
                 <div class='strip-item'>
                     <div class='strip-label'>Environment</div>
-                    <div class='strip-value'>{metadata['cloud_environment']}</div>
+                    <div class='strip-value'>{environment}</div>
                 </div>
                 <div class='strip-item'>
                     <div class='strip-label'>Scope</div>
-                    <div class='strip-value'>{metadata['assessment_scope']}</div>
+                    <div class='strip-value'>{scope}</div>
                 </div>
                 <div class='strip-item'>
                     <div class='strip-label'>Risk Appetite</div>
-                    <div class='strip-value'>{metadata['risk_appetite']}</div>
+                    <div class='strip-value'>{risk_appetite}</div>
                 </div>
                 <div class='strip-item'>
                     <div class='strip-label'>Assessment Date</div>
-                    <div class='strip-value'>{metadata['checked_date']}</div>
+                    <div class='strip-value'>{checked_date}</div>
                 </div>
             </div>
         </div>
