@@ -25,6 +25,7 @@ ASSESSMENT_SCOPES: tuple[str, ...] = ("운영 환경", "개발/검증 환경", "
 RISK_APPETITES: tuple[str, ...] = ("보수적", "표준", "공격적")
 CHECKBOX_PREFIX = "security_check_"
 CREATOR_NAME = "Hayden Shin"
+BUG_REPORT_EMAIL = "shinminchuhl@gmail.com"
 
 RISK_STYLES: dict[str, dict[str, str]] = {
     "양호": {"bg": "#E8F5E9", "fg": "#1B5E20", "border": "#A5D6A7"},
@@ -393,7 +394,7 @@ def render_header(metadata: dict[str, str | date]) -> None:
 
     st.markdown("<div class='dashboard-title'>Cloud Security Checklist</div>", unsafe_allow_html=True)
     st.markdown(
-        f"<div class='creator-line'>Created by <strong>{CREATOR_NAME}</strong> · Copyright (c) 2026 {CREATOR_NAME}</div>",
+        f"<div class='creator-line'>Created by <strong>{CREATOR_NAME}</strong> · Bug reports: {BUG_REPORT_EMAIL}</div>",
         unsafe_allow_html=True,
     )
     st.markdown(
@@ -441,7 +442,7 @@ def render_footer() -> None:
         f"""
         <div class='footer-notice'>
         Cloud Security Checklist was created and maintained by <strong>{CREATOR_NAME}</strong>.
-        Copyright (c) 2026 {CREATOR_NAME}. See the project license for usage terms.
+        For bug reports, contact {BUG_REPORT_EMAIL}.
         </div>
         """,
         unsafe_allow_html=True,
