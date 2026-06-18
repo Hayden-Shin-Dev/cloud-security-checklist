@@ -325,6 +325,7 @@ def build_export_dataframe(
                 "점검 범위": metadata["assessment_scope"],
                 "카테고리": check.category,
                 "심각도": check.severity,
+                "개선 단계": check.remediation_phase,
                 "점검 항목": check.title,
                 "적용 여부": "Y" if is_checked else "N",
                 "가중치": check.weight,
@@ -544,6 +545,7 @@ def render_risk_register(selected_ids: list[str]) -> None:
             "우선순위": index,
             "카테고리": item["category"],
             "심각도": item["severity"],
+            "개선 단계": item["remediation_phase"],
             "가중치": item["weight"],
             "위험 요소": item["item"],
             "권고사항": item["recommendation"],
@@ -555,7 +557,7 @@ def render_risk_register(selected_ids: list[str]) -> None:
 
     st.subheader("우선 조치 항목")
     for item in recommendations[:5]:
-        with st.expander(f"{item['severity']} | {item['item']}", expanded=False):
+        with st.expander(f"{item['severity']} | {item['remediation_phase']} | {item['item']}", expanded=False):
             st.write(item["recommendation"])
             st.caption(f"확인 증적: {item['evidence_hint']}")
 
