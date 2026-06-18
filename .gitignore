@@ -9,6 +9,7 @@ env/
 .env.*
 
 .streamlit/secrets.toml
+.streamlit/cache/
 
 .DS_Store
 Thumbs.db
@@ -16,3 +17,6 @@ Thumbs.db
 sample_output/*
 !sample_output/.gitkeep
 *.csv
+*.xlsx
+*.pdf
+reports/
