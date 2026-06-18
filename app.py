@@ -207,6 +207,14 @@ def configure_page() -> None:
             border: 1px solid #CBD5E1;
             font-weight: 680;
         }
+        div[data-testid="stDataFrame"] {
+            border: 1px solid #E5E7EB;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        div[data-testid="stTabs"] button {
+            font-weight: 700;
+        }
         @media (max-width: 900px) {
             .block-container {
                 padding-left: 1rem;
