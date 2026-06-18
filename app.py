@@ -336,6 +336,23 @@ def configure_page() -> None:
             font-size: 0.88rem;
             line-height: 1.5;
         }
+        .section-heading {
+            margin: 0.25rem 0 0.85rem;
+        }
+        .section-kicker {
+            color: var(--brand);
+            font-size: 0.72rem;
+            font-weight: 780;
+            letter-spacing: 0.07em;
+            text-transform: uppercase;
+        }
+        .section-title {
+            color: var(--ink-strong);
+            font-size: 1.08rem;
+            font-weight: 780;
+            line-height: 1.35;
+            margin-top: 0.15rem;
+        }
         .insight-panel {
             padding: 1rem;
             margin: 0.7rem 0 1rem;
@@ -496,6 +513,20 @@ def safe_html(value: object) -> str:
     """Escape a value before inserting it into an HTML snippet."""
 
     return escape(str(value), quote=True)
+
+
+def render_section_heading(title: str, kicker: str) -> None:
+    """Render a compact section heading."""
+
+    st.markdown(
+        f"""
+        <div class='section-heading'>
+            <div class='section-kicker'>{safe_html(kicker)}</div>
+            <div class='section-title'>{safe_html(title)}</div>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
 
 
 def build_export_filename(metadata: dict[str, str | date]) -> str:
@@ -969,27 +1000,27 @@ def main() -> None:
     with overview_tab:
         left_col, right_col = st.columns([1.05, 1])
         with left_col:
-            st.subheader("카테고리별 보안 성숙도")
+            render_section_heading("카테고리별 보안 성숙도", "Overview")
             render_category_cards(selected_ids)
         with right_col:
-            st.subheader("카테고리 점수 요약")
+            render_section_heading("카테고리 점수 요약", "Score Analysis")
             render_category_chart(selected_ids)
             render_category_table(selected_ids)
-            st.subheader("심각도별 통제 현황")
+            render_section_heading("심각도별 통제 현황", "Control Coverage")
             render_severity_breakdown(selected_ids)
 
     with checklist_tab:
-        st.subheader("보안 체크리스트")
+        render_section_heading("보안 체크리스트", "Assessment")
         render_checklist()
-        st.subheader("Control Catalog")
+        render_section_heading("Control Catalog", "Reference")
         render_control_catalog()
 
     with risk_tab:
-        st.subheader("주요 위험 요소 및 개선 권고사항")
+        render_section_heading("주요 위험 요소 및 개선 권고사항", "Risk Register")
         render_risk_register(selected_ids)
 
     with export_tab:
-        st.subheader("점검 결과 다운로드")
+        render_section_heading("점검 결과 다운로드", "Export")
         render_export_panel(metadata=metadata, selected_ids=selected_ids, summary=summary)
 
     render_footer()
