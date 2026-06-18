@@ -291,6 +291,18 @@ def get_risk_level(score: int) -> str:
     return "매우 위험"
 
 
+def get_risk_message(score: int) -> str:
+    """Return an executive interpretation for the calculated score."""
+
+    if score >= 80:
+        return "핵심 보안 통제가 대체로 적용되어 있습니다. 남은 개선 항목은 정기 운영 과제로 관리하세요."
+    if score >= 60:
+        return "주요 통제 일부가 미흡합니다. 외부 노출과 관리자 접근 관련 항목을 우선 검토하세요."
+    if score >= 40:
+        return "여러 핵심 통제가 부족합니다. 네트워크 노출, MFA, 로깅 정책을 단기 개선 과제로 지정하세요."
+    return "기본 보안 통제 부재 가능성이 높습니다. 즉시 접근 통제와 외부 노출 차단부터 조치해야 합니다."
+
+
 def get_category_status(score: int) -> str:
     """Return a compact category status label for a percentage score."""
 
