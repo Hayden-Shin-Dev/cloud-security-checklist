@@ -116,6 +116,7 @@ def configure_page() -> None:
         .metric-card {
             min-height: 142px;
             padding: 1rem;
+            border-top: 3px solid #1D4ED8;
         }
         .metric-label {
             color: var(--muted);
