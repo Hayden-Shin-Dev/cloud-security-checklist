@@ -564,6 +564,15 @@ def render_risk_register(selected_ids: list[str]) -> None:
         st.success("미충족 항목이 없습니다. 현재 통제 수준을 유지하고 정기 점검 주기를 운영하세요.")
         return
 
+    severity_filter = st.multiselect(
+        "심각도 필터",
+        options=list(SEVERITY_STYLES.keys()),
+        default=list(SEVERITY_STYLES.keys()),
+    )
+    filtered_recommendations = [
+        item for item in recommendations if item["severity"] in severity_filter
+    ]
+
     rows = [
         {
             "우선순위": index,
@@ -575,12 +584,12 @@ def render_risk_register(selected_ids: list[str]) -> None:
             "권고사항": item["recommendation"],
             "증적 힌트": item["evidence_hint"],
         }
-        for index, item in enumerate(recommendations, start=1)
+        for index, item in enumerate(filtered_recommendations, start=1)
     ]
     st.dataframe(pd.DataFrame(rows), hide_index=True, use_container_width=True)
 
     st.subheader("우선 조치 항목")
-    for item in recommendations[:5]:
+    for item in filtered_recommendations[:5]:
         with st.expander(f"{item['severity']} | {item['remediation_phase']} | {item['item']}", expanded=False):
             st.write(item["recommendation"])
             st.caption(f"확인 증적: {item['evidence_hint']}")
