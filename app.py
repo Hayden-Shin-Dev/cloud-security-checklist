@@ -572,6 +572,9 @@ def render_risk_register(selected_ids: list[str]) -> None:
     filtered_recommendations = [
         item for item in recommendations if item["severity"] in severity_filter
     ]
+    if not filtered_recommendations:
+        st.info("선택한 심각도 조건에 해당하는 위험 요소가 없습니다.")
+        return
 
     rows = [
         {
