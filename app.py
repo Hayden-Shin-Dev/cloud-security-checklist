@@ -324,6 +324,19 @@ def configure_page() -> None:
             font-weight: 780;
             text-align: right;
         }
+        .score-track {
+            background: var(--surface-muted);
+            border: 1px solid var(--line);
+            border-radius: 999px;
+            height: 9px;
+            margin-top: 0.65rem;
+            overflow: hidden;
+        }
+        .score-fill {
+            background: linear-gradient(90deg, var(--brand), var(--accent));
+            border-radius: 999px;
+            height: 100%;
+        }
         .small-muted {
             color: var(--muted);
             font-size: 0.86rem;
@@ -679,11 +692,14 @@ def render_category_cards(selected_ids: list[str]) -> None:
                     </div>
                 </div>
                 <div class='small-muted'>{meta.description}</div>
+                <div class='score-track'>
+                    <div class='score-fill' style='width:{values['score']}%;'></div>
+                </div>
+                <div class='small-muted'>{values['earned']} / {values['total']} weighted points</div>
             </div>
             """,
             unsafe_allow_html=True,
         )
-        st.progress(values["score"] / 100)
 
 
 def render_category_table(selected_ids: list[str]) -> None:
