@@ -580,6 +580,23 @@ def render_checklist() -> None:
                     st.caption(f"{check.weight}점")
 
 
+def render_control_catalog() -> None:
+    """Render all controls as a reference catalog."""
+
+    rows = [
+        {
+            "카테고리": check.category,
+            "심각도": check.severity,
+            "개선 단계": check.remediation_phase,
+            "가중치": check.weight,
+            "점검 항목": check.title,
+            "확인 증적": check.evidence_hint,
+        }
+        for check in SECURITY_CHECKS
+    ]
+    st.dataframe(pd.DataFrame(rows), hide_index=True, use_container_width=True)
+
+
 def render_risk_register(selected_ids: list[str]) -> None:
     """Render unchecked controls and recommendations."""
 
@@ -679,6 +696,8 @@ def main() -> None:
     with checklist_tab:
         st.subheader("보안 체크리스트")
         render_checklist()
+        st.subheader("Control Catalog")
+        render_control_catalog()
 
     with risk_tab:
         st.subheader("주요 위험 요소 및 개선 권고사항")
