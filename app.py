@@ -20,6 +20,7 @@ from security_checks import (
 
 CLOUD_ENVIRONMENTS: tuple[str, ...] = ("Azure", "AWS", "GCP", "On-Premise")
 ASSESSMENT_SCOPES: tuple[str, ...] = ("운영 환경", "개발/검증 환경", "전사 공통", "신규 구축")
+RISK_APPETITES: tuple[str, ...] = ("보수적", "표준", "공격적")
 CHECKBOX_PREFIX = "security_check_"
 
 RISK_STYLES: dict[str, dict[str, str]] = {
@@ -280,6 +281,7 @@ def render_sidebar() -> dict[str, str | date]:
         ).strip()
         cloud_environment = st.selectbox("클라우드 환경", CLOUD_ENVIRONMENTS)
         assessment_scope = st.selectbox("점검 범위", ASSESSMENT_SCOPES)
+        risk_appetite = st.selectbox("위험 수용 기준", RISK_APPETITES, index=1)
         assessment_note = st.text_area(
             "점검 메모",
             placeholder="예: 운영 구독 기준 1차 자체 점검",
@@ -303,6 +305,7 @@ def render_sidebar() -> dict[str, str | date]:
         "assessor_name": assessor_name or "미입력",
         "cloud_environment": cloud_environment,
         "assessment_scope": assessment_scope,
+        "risk_appetite": risk_appetite,
         "assessment_note": assessment_note or "미입력",
         "checked_date": checked_date,
     }
@@ -329,6 +332,7 @@ def build_export_dataframe(
                 "점검 담당자": metadata["assessor_name"],
                 "클라우드 환경": metadata["cloud_environment"],
                 "점검 범위": metadata["assessment_scope"],
+                "위험 수용 기준": metadata["risk_appetite"],
                 "점검 메모": metadata["assessment_note"],
                 "카테고리": check.category,
                 "심각도": check.severity,
