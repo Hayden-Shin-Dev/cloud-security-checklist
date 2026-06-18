@@ -217,10 +217,25 @@ def configure_page() -> None:
             font-weight: 680;
             overflow-wrap: anywhere;
         }
+        .executive-grid {
+            display: grid;
+            gap: 0.85rem;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            margin-bottom: 0.75rem;
+        }
         .metric-card {
             min-height: 142px;
-            padding: 1rem;
+            padding: 1rem 1.05rem;
             border-top: 3px solid var(--brand);
+        }
+        .metric-card.warning {
+            border-top-color: var(--warning);
+        }
+        .metric-card.danger {
+            border-top-color: var(--danger);
+        }
+        .metric-card.success {
+            border-top-color: var(--success);
         }
         .metric-label {
             color: var(--muted);
@@ -228,11 +243,21 @@ def configure_page() -> None:
             font-weight: 700;
             margin-bottom: 0.45rem;
         }
+        .metric-value-row {
+            align-items: baseline;
+            display: flex;
+            gap: 0.35rem;
+        }
         .metric-value {
             color: var(--ink-strong);
             font-size: 2.35rem;
             font-weight: 780;
             line-height: 1;
+        }
+        .metric-unit {
+            color: var(--muted);
+            font-size: 0.92rem;
+            font-weight: 650;
         }
         .metric-help {
             color: var(--muted);
@@ -334,9 +359,15 @@ def configure_page() -> None:
             .metric-value {
                 font-size: 2rem;
             }
+            .executive-grid {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
         }
         @media (max-width: 560px) {
             .status-strip {
+                grid-template-columns: 1fr;
+            }
+            .executive-grid {
                 grid-template-columns: 1fr;
             }
             .dashboard-title {
@@ -555,51 +586,42 @@ def render_score_cards(summary: dict[str, int | str]) -> None:
     risk_badge = render_badge(risk_level, RISK_STYLES[risk_level], class_name="risk-badge")
     completion = round((int(summary["checked_count"]) / int(summary["total_count"])) * 100)
 
-    score_col, risk_col, gap_col, critical_col = st.columns(4)
-    with score_col:
-        st.markdown(
-            f"""
+    st.markdown(
+        f"""
+        <div class='executive-grid'>
             <div class='metric-card'>
                 <div class='metric-label'>Security Score</div>
-                <div class='metric-value'>{summary['score']}<span style='font-size:1rem;color:#6B7280;'> / 100</span></div>
+                <div class='metric-value-row'>
+                    <div class='metric-value'>{summary['score']}</div>
+                    <div class='metric-unit'>/ 100</div>
+                </div>
                 <div class='metric-help'>가중치 기반 총점</div>
             </div>
-            """,
-            unsafe_allow_html=True,
-        )
-    with risk_col:
-        st.markdown(
-            f"""
-            <div class='metric-card'>
+            <div class='metric-card success'>
                 <div class='metric-label'>Risk Rating</div>
                 {risk_badge}
                 <div class='metric-help'>점수 구간 기준 자동 산정</div>
             </div>
-            """,
-            unsafe_allow_html=True,
-        )
-    with gap_col:
-        st.markdown(
-            f"""
-            <div class='metric-card'>
+            <div class='metric-card warning'>
                 <div class='metric-label'>Open Gaps</div>
-                <div class='metric-value'>{summary['unchecked_count']}</div>
+                <div class='metric-value-row'>
+                    <div class='metric-value'>{summary['unchecked_count']}</div>
+                    <div class='metric-unit'>items</div>
+                </div>
                 <div class='metric-help'>미충족 통제 항목</div>
             </div>
-            """,
-            unsafe_allow_html=True,
-        )
-    with critical_col:
-        st.markdown(
-            f"""
-            <div class='metric-card'>
+            <div class='metric-card danger'>
                 <div class='metric-label'>Critical Gaps</div>
-                <div class='metric-value'>{summary['critical_unchecked_count']}</div>
+                <div class='metric-value-row'>
+                    <div class='metric-value'>{summary['critical_unchecked_count']}</div>
+                    <div class='metric-unit'>items</div>
+                </div>
                 <div class='metric-help'>우선 조치 대상</div>
             </div>
-            """,
-            unsafe_allow_html=True,
-        )
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
 
     st.progress(int(summary["score"]) / 100)
     st.caption(f"통제 적용률 {completion}% | {summary['checked_count']} / {summary['total_count']} 항목 충족")
