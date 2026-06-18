@@ -534,7 +534,15 @@ def render_category_table(selected_ids: list[str]) -> None:
 def render_checklist() -> None:
     """Render checklist controls grouped by category."""
 
+    selected_categories = st.multiselect(
+        "카테고리 필터",
+        options=CATEGORIES,
+        default=list(CATEGORIES),
+    )
+
     for meta in CATEGORY_METADATA:
+        if meta.name not in selected_categories:
+            continue
         with st.expander(f"{meta.name} | {meta.owner}", expanded=True):
             st.caption(meta.description)
             checks = [check for check in SECURITY_CHECKS if check.category == meta.name]
