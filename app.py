@@ -16,6 +16,7 @@ from security_checks import (
     calculate_category_scores,
     calculate_severity_breakdown,
     generate_recommendations,
+    get_risk_message,
 )
 
 
@@ -465,14 +466,7 @@ def render_executive_note(summary: dict[str, int | str]) -> None:
 
     score = int(summary["score"])
     risk_level = str(summary["risk_level"])
-    if score >= 80:
-        message = "핵심 보안 통제가 대체로 적용되어 있습니다. 남은 개선 항목은 정기 운영 과제로 관리하세요."
-    elif score >= 60:
-        message = "주요 통제 일부가 미흡합니다. 외부 노출과 관리자 접근 관련 항목을 우선 검토하세요."
-    elif score >= 40:
-        message = "여러 핵심 통제가 부족합니다. 네트워크 노출, MFA, 로깅 정책을 단기 개선 과제로 지정하세요."
-    else:
-        message = "기본 보안 통제 부재 가능성이 높습니다. 즉시 접근 통제와 외부 노출 차단부터 조치해야 합니다."
+    message = get_risk_message(score)
 
     st.markdown(
         f"""
