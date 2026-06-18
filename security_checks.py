@@ -61,6 +61,14 @@ class AssessmentSummary(TypedDict):
     total_count: int
 
 
+class SeverityBreakdown(TypedDict):
+    """Selected and missing counts for a severity level."""
+
+    selected: int
+    missing: int
+    total: int
+
+
 CATEGORY_METADATA: tuple[CategoryMeta, ...] = (
     CategoryMeta(
         name="계정 및 접근 관리",
@@ -356,3 +364,22 @@ def build_assessment_summary(selected_ids: Iterable[str]) -> AssessmentSummary:
         "critical_unchecked_count": critical_unchecked_count,
         "total_count": len(SECURITY_CHECKS),
     }
+
+
+def calculate_severity_breakdown(selected_ids: Iterable[str]) -> dict[str, SeverityBreakdown]:
+    """Calculate selected and missing control counts by severity."""
+
+    selected = set(selected_ids)
+    result: dict[str, SeverityBreakdown] = {}
+
+    for severity in SEVERITY_RANK:
+        controls = [check for check in SECURITY_CHECKS if check.severity == severity]
+        selected_count = sum(1 for check in controls if check.id in selected)
+        total = len(controls)
+        result[severity] = {
+            "selected": selected_count,
+            "missing": total - selected_count,
+            "total": total,
+        }
+
+    return result
