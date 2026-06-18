@@ -282,6 +282,43 @@ def configure_page() -> None:
             padding: 0.22rem 0.48rem;
             font-size: 0.72rem;
         }
+        .risk-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.2rem 0 1rem;
+        }
+        .risk-item {
+            background: var(--surface);
+            border: 1px solid var(--line);
+            border-left: 4px solid var(--danger);
+            border-radius: 8px;
+            box-shadow: var(--card-shadow);
+            padding: 0.95rem 1rem;
+        }
+        .risk-item-head {
+            align-items: center;
+            display: flex;
+            gap: 0.5rem;
+            justify-content: space-between;
+            margin-bottom: 0.45rem;
+        }
+        .risk-item-title {
+            color: var(--ink-strong);
+            font-size: 0.98rem;
+            font-weight: 760;
+            line-height: 1.45;
+        }
+        .risk-item-meta {
+            color: var(--muted);
+            font-size: 0.82rem;
+            font-weight: 650;
+            white-space: nowrap;
+        }
+        .risk-item-copy {
+            color: var(--muted);
+            font-size: 0.88rem;
+            line-height: 1.5;
+        }
         .insight-panel {
             padding: 1rem;
             margin: 0.7rem 0 1rem;
@@ -824,6 +861,27 @@ def render_risk_register(selected_ids: list[str]) -> None:
     if not filtered_recommendations:
         st.info("선택한 심각도 조건에 해당하는 위험 요소가 없습니다.")
         return
+
+    risk_cards = []
+    for item in filtered_recommendations[:3]:
+        severity_badge = render_badge(
+            item["severity"],
+            SEVERITY_STYLES[item["severity"]],
+            class_name="severity-badge",
+        )
+        risk_cards.append(
+            f"""
+            <div class='risk-item'>
+                <div class='risk-item-head'>
+                    <div>{severity_badge}</div>
+                    <div class='risk-item-meta'>{safe_html(item['remediation_phase'])} · {item['weight']}점</div>
+                </div>
+                <div class='risk-item-title'>{safe_html(item['item'])}</div>
+                <div class='risk-item-copy'>{safe_html(item['recommendation'])}</div>
+            </div>
+            """
+        )
+    st.markdown("<div class='risk-list'>" + "".join(risk_cards) + "</div>", unsafe_allow_html=True)
 
     rows = [
         {
