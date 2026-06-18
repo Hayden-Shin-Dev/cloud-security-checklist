@@ -117,6 +117,25 @@ def configure_page() -> None:
         section[data-testid="stSidebar"] p {
             color: var(--ink);
         }
+        .dashboard-header {
+            border-bottom: 1px solid var(--line);
+            margin-bottom: 1.2rem;
+            padding: 0.35rem 0 1.05rem;
+        }
+        .header-main {
+            align-items: flex-start;
+            display: flex;
+            gap: 1.25rem;
+            justify-content: space-between;
+        }
+        .dashboard-eyebrow {
+            color: var(--brand);
+            font-size: 0.78rem;
+            font-weight: 780;
+            letter-spacing: 0.08em;
+            margin-bottom: 0.3rem;
+            text-transform: uppercase;
+        }
         .dashboard-title {
             color: var(--ink-strong);
             font-size: 2.15rem;
@@ -129,16 +148,36 @@ def configure_page() -> None:
             font-size: 0.98rem;
             line-height: 1.55;
             max-width: 980px;
-            margin-bottom: 1rem;
+            margin-bottom: 0.6rem;
+        }
+        .header-meta {
+            align-items: flex-end;
+            display: flex;
+            flex-direction: column;
+            gap: 0.45rem;
+            min-width: 220px;
+            padding-top: 0.15rem;
+            text-align: right;
         }
         .creator-line {
             color: var(--muted);
             font-size: 0.88rem;
             font-weight: 650;
-            margin-bottom: 0.9rem;
         }
         .creator-line strong {
             color: var(--ink-strong);
+        }
+        .contact-pill {
+            background: var(--surface-soft);
+            border: 1px solid var(--line);
+            border-radius: 999px;
+            color: var(--brand-strong);
+            display: inline-flex;
+            font-size: 0.8rem;
+            font-weight: 720;
+            padding: 0.35rem 0.65rem;
+            text-decoration: none;
+            white-space: nowrap;
         }
         .footer-notice {
             border-top: 1px solid var(--line);
@@ -151,7 +190,7 @@ def configure_page() -> None:
             display: grid;
             grid-template-columns: repeat(5, minmax(0, 1fr));
             gap: 0.7rem;
-            margin: 1rem 0 1.2rem;
+            margin: 0.95rem 0 0;
         }
         .strip-item,
         .metric-card,
@@ -303,6 +342,15 @@ def configure_page() -> None:
             .dashboard-title {
                 font-size: 1.7rem;
             }
+            .header-main {
+                display: block;
+            }
+            .header-meta {
+                align-items: flex-start;
+                margin-top: 0.75rem;
+                min-width: 0;
+                text-align: left;
+            }
         }
         </style>
         """,
@@ -442,42 +490,43 @@ def build_export_dataframe(
 def render_header(metadata: dict[str, str | date]) -> None:
     """Render dashboard title and assessment metadata strip."""
 
-    st.markdown("<div class='dashboard-title'>Cloud Security Checklist</div>", unsafe_allow_html=True)
-    st.markdown(
-        f"<div class='creator-line'>Created by <strong>{CREATOR_NAME}</strong> · Bug reports: {BUG_REPORT_EMAIL}</div>",
-        unsafe_allow_html=True,
-    )
-    st.markdown(
-        """
-        <div class='dashboard-subtitle'>
-        클라우드 보안 통제의 적용 상태를 빠르게 점검하고, 경영진 보고에 필요한 점수,
-        위험 등급, 우선 개선 항목을 한 화면에서 확인합니다.
-        </div>
-        """,
-        unsafe_allow_html=True,
-    )
     st.markdown(
         f"""
-        <div class='status-strip'>
-            <div class='strip-item'>
-                <div class='strip-label'>Organization</div>
-                <div class='strip-value'>{metadata['organization_name']}</div>
+        <div class='dashboard-header'>
+            <div class='header-main'>
+                <div>
+                    <div class='dashboard-eyebrow'>Security Operations Workspace</div>
+                    <div class='dashboard-title'>Cloud Security Checklist</div>
+                    <div class='dashboard-subtitle'>
+                    클라우드 보안 통제 적용 상태와 개선 우선순위를 점검하는 비즈니스 보안 대시보드입니다.
+                    </div>
+                </div>
+                <div class='header-meta'>
+                    <div class='creator-line'>Created by <strong>{CREATOR_NAME}</strong></div>
+                    <a class='contact-pill' href='mailto:{BUG_REPORT_EMAIL}'>Bug reports: {BUG_REPORT_EMAIL}</a>
+                </div>
             </div>
-            <div class='strip-item'>
-                <div class='strip-label'>Environment</div>
-                <div class='strip-value'>{metadata['cloud_environment']}</div>
-            </div>
-            <div class='strip-item'>
-                <div class='strip-label'>Scope</div>
-                <div class='strip-value'>{metadata['assessment_scope']}</div>
-            </div>
-            <div class='strip-item'>
-                <div class='strip-label'>Risk Appetite</div>
-                <div class='strip-value'>{metadata['risk_appetite']}</div>
-            </div>
-            <div class='strip-item'>
-                <div class='strip-label'>Assessment Date</div>
-                <div class='strip-value'>{metadata['checked_date']}</div>
+            <div class='status-strip'>
+                <div class='strip-item'>
+                    <div class='strip-label'>Organization</div>
+                    <div class='strip-value'>{metadata['organization_name']}</div>
+                </div>
+                <div class='strip-item'>
+                    <div class='strip-label'>Environment</div>
+                    <div class='strip-value'>{metadata['cloud_environment']}</div>
+                </div>
+                <div class='strip-item'>
+                    <div class='strip-label'>Scope</div>
+                    <div class='strip-value'>{metadata['assessment_scope']}</div>
+                </div>
+                <div class='strip-item'>
+                    <div class='strip-label'>Risk Appetite</div>
+                    <div class='strip-value'>{metadata['risk_appetite']}</div>
+                </div>
+                <div class='strip-item'>
+                    <div class='strip-label'>Assessment Date</div>
+                    <div class='strip-value'>{metadata['checked_date']}</div>
+                </div>
             </div>
         </div>
         """,
