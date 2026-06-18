@@ -280,6 +280,11 @@ def render_sidebar() -> dict[str, str | date]:
         ).strip()
         cloud_environment = st.selectbox("클라우드 환경", CLOUD_ENVIRONMENTS)
         assessment_scope = st.selectbox("점검 범위", ASSESSMENT_SCOPES)
+        assessment_note = st.text_area(
+            "점검 메모",
+            placeholder="예: 운영 구독 기준 1차 자체 점검",
+            height=84,
+        ).strip()
         checked_date = date.today()
         st.caption(f"점검일: {checked_date.isoformat()}")
 
@@ -298,6 +303,7 @@ def render_sidebar() -> dict[str, str | date]:
         "assessor_name": assessor_name or "미입력",
         "cloud_environment": cloud_environment,
         "assessment_scope": assessment_scope,
+        "assessment_note": assessment_note or "미입력",
         "checked_date": checked_date,
     }
 
@@ -323,6 +329,7 @@ def build_export_dataframe(
                 "점검 담당자": metadata["assessor_name"],
                 "클라우드 환경": metadata["cloud_environment"],
                 "점검 범위": metadata["assessment_scope"],
+                "점검 메모": metadata["assessment_note"],
                 "카테고리": check.category,
                 "심각도": check.severity,
                 "개선 단계": check.remediation_phase,
