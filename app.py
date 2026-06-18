@@ -266,6 +266,15 @@ def render_badge(text: str, style: dict[str, str], *, class_name: str) -> str:
     )
 
 
+def build_export_filename(metadata: dict[str, str | date]) -> str:
+    """Build a stable CSV filename from the assessment metadata."""
+
+    checked_date = metadata["checked_date"]
+    environment = str(metadata["cloud_environment"]).lower().replace("-", "_")
+    scope = str(metadata["assessment_scope"]).replace("/", "_").replace(" ", "_")
+    return f"cloud_security_checklist_{environment}_{scope}_{checked_date}.csv"
+
+
 def render_sidebar() -> dict[str, str | date]:
     """Render assessment controls and return metadata."""
 
@@ -593,14 +602,12 @@ def render_export_panel(
     )
     st.dataframe(export_df, hide_index=True, use_container_width=True)
 
-    checked_date = metadata["checked_date"]
-    environment = str(metadata["cloud_environment"]).lower().replace("-", "_")
     csv_data = export_df.to_csv(index=False).encode("utf-8-sig")
 
     st.download_button(
         label="CSV 다운로드",
         data=csv_data,
-        file_name=f"cloud_security_checklist_{environment}_{checked_date}.csv",
+        file_name=build_export_filename(metadata),
         mime="text/csv",
         use_container_width=True,
     )
