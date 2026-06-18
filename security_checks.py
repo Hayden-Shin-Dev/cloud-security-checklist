@@ -24,6 +24,7 @@ class SecurityCheck:
     title: str
     weight: int
     severity: str
+    remediation_phase: str
     evidence_hint: str
     recommendation: str
 
@@ -43,6 +44,7 @@ class Recommendation(TypedDict):
     category: str
     item: str
     severity: str
+    remediation_phase: str
     weight: int
     evidence_hint: str
     recommendation: str
@@ -103,6 +105,7 @@ SECURITY_CHECKS: tuple[SecurityCheck, ...] = (
         title="관리자 계정에 MFA가 적용되어 있다.",
         weight=10,
         severity="Critical",
+        remediation_phase="즉시 조치",
         evidence_hint="관리자 계정 MFA 정책, 조건부 접근 정책, 예외 계정 목록",
         recommendation="모든 관리자 계정에 MFA를 필수로 적용하고 예외 계정은 별도 승인 및 정기 검토 대상으로 관리하세요.",
     ),
@@ -112,6 +115,7 @@ SECURITY_CHECKS: tuple[SecurityCheck, ...] = (
         title="사용자별 계정을 사용하고 공용 관리자 계정을 사용하지 않는다.",
         weight=6,
         severity="High",
+        remediation_phase="단기 개선",
         evidence_hint="IAM 사용자 목록, 공유 계정 사용 이력, 관리자 그룹 멤버십",
         recommendation="개인별 계정을 발급하고 공용 관리자 계정은 비활성화하거나 비상 접근 절차로만 제한하세요.",
     ),
@@ -121,6 +125,7 @@ SECURITY_CHECKS: tuple[SecurityCheck, ...] = (
         title="최소 권한 원칙이 적용되어 있다.",
         weight=8,
         severity="Critical",
+        remediation_phase="즉시 조치",
         evidence_hint="역할 기반 권한 정책, 관리자 권한 부여 이력, 권한 검토 결과",
         recommendation="업무 역할별 권한 템플릿을 정의하고 관리자 권한은 필요한 기간에만 부여되도록 정기적으로 회수하세요.",
     ),
@@ -130,6 +135,7 @@ SECURITY_CHECKS: tuple[SecurityCheck, ...] = (
         title="방화벽 또는 보안 그룹에 Default Deny 정책이 적용되어 있다.",
         weight=8,
         severity="Critical",
+        remediation_phase="즉시 조치",
         evidence_hint="방화벽 정책, 보안 그룹 인바운드 규칙, 네트워크 ACL",
         recommendation="인바운드 기본 정책을 차단으로 설정하고 업무에 필요한 포트와 출발지만 명시적으로 허용하세요.",
     ),
@@ -139,6 +145,7 @@ SECURITY_CHECKS: tuple[SecurityCheck, ...] = (
         title="SSH 22번 포트가 전체 인터넷에 공개되어 있지 않다.",
         weight=7,
         severity="High",
+        remediation_phase="단기 개선",
         evidence_hint="0.0.0.0/0 또는 ::/0 대상 SSH 허용 규칙",
         recommendation="SSH 접근은 VPN, Bastion Host, Zero Trust 접근 제어 또는 특정 관리 대역으로 제한하세요.",
     ),
@@ -148,6 +155,7 @@ SECURITY_CHECKS: tuple[SecurityCheck, ...] = (
         title="RDP 3389번 포트가 전체 인터넷에 공개되어 있지 않다.",
         weight=7,
         severity="High",
+        remediation_phase="단기 개선",
         evidence_hint="0.0.0.0/0 또는 ::/0 대상 RDP 허용 규칙",
         recommendation="RDP는 인터넷 직접 노출을 제거하고 Bastion, JIT 접근, VPN 또는 관리형 원격 접속 서비스를 사용하세요.",
     ),
@@ -157,6 +165,7 @@ SECURITY_CHECKS: tuple[SecurityCheck, ...] = (
         title="데이터베이스가 인터넷에 직접 노출되어 있지 않다.",
         weight=8,
         severity="Critical",
+        remediation_phase="즉시 조치",
         evidence_hint="공개 IP, 퍼블릭 엔드포인트, 데이터베이스 방화벽 허용 목록",
         recommendation="데이터베이스는 사설 네트워크에 배치하고 애플리케이션 계층 또는 허용된 관리 경로에서만 접근하도록 제한하세요.",
     ),
@@ -166,6 +175,7 @@ SECURITY_CHECKS: tuple[SecurityCheck, ...] = (
         title="저장 데이터가 암호화되어 있다.",
         weight=7,
         severity="High",
+        remediation_phase="단기 개선",
         evidence_hint="스토리지, 데이터베이스, 백업 저장소의 암호화 설정",
         recommendation="스토리지, 데이터베이스, 백업 저장소에 저장 데이터 암호화를 적용하고 키 관리 권한을 분리하세요.",
     ),
@@ -175,6 +185,7 @@ SECURITY_CHECKS: tuple[SecurityCheck, ...] = (
         title="전송 데이터에 HTTPS 또는 TLS가 적용되어 있다.",
         weight=7,
         severity="High",
+        remediation_phase="단기 개선",
         evidence_hint="TLS 인증서, 로드밸런서 리스너, 내부 API 통신 설정",
         recommendation="외부 및 내부 통신에 TLS를 적용하고 만료 예정 인증서와 취약한 프로토콜 사용 여부를 점검하세요.",
     ),
@@ -184,6 +195,7 @@ SECURITY_CHECKS: tuple[SecurityCheck, ...] = (
         title="시스템 로그와 접근 로그가 수집되고 있다.",
         weight=7,
         severity="High",
+        remediation_phase="단기 개선",
         evidence_hint="중앙 로그 저장소, 감사 로그 수집 정책, 로그 보존 기간",
         recommendation="시스템, 네트워크, IAM, 애플리케이션 접근 로그를 중앙 로그 저장소로 수집하고 보존 기간을 정의하세요.",
     ),
@@ -193,6 +205,7 @@ SECURITY_CHECKS: tuple[SecurityCheck, ...] = (
         title="비정상 접근에 대한 알림이 설정되어 있다.",
         weight=7,
         severity="High",
+        remediation_phase="단기 개선",
         evidence_hint="알림 규칙, SIEM 탐지 정책, 관리자 로그인 실패 이벤트",
         recommendation="관리자 로그인 실패, 해외 접속, 권한 상승, 공개 설정 변경 같은 이벤트에 실시간 알림을 설정하세요.",
     ),
@@ -202,6 +215,7 @@ SECURITY_CHECKS: tuple[SecurityCheck, ...] = (
         title="정기적인 데이터 백업이 설정되어 있다.",
         weight=6,
         severity="Medium",
+        remediation_phase="운영 개선",
         evidence_hint="백업 정책, 백업 성공 이력, 보존 기간 설정",
         recommendation="핵심 데이터와 설정 자산에 정기 백업 정책을 적용하고 백업 실패 알림을 운영 절차에 포함하세요.",
     ),
@@ -211,6 +225,7 @@ SECURITY_CHECKS: tuple[SecurityCheck, ...] = (
         title="백업 데이터의 복구 테스트를 수행하고 있다.",
         weight=5,
         severity="Medium",
+        remediation_phase="운영 개선",
         evidence_hint="복구 테스트 결과, RTO/RPO 검증 기록, 장애 대응 훈련 이력",
         recommendation="정기적으로 복구 리허설을 수행해 RTO와 RPO를 검증하고 결과를 운영 개선 항목으로 관리하세요.",
     ),
@@ -220,6 +235,7 @@ SECURITY_CHECKS: tuple[SecurityCheck, ...] = (
         title="운영 환경과 개발 환경이 분리되어 있다.",
         weight=4,
         severity="Medium",
+        remediation_phase="운영 개선",
         evidence_hint="계정, 네트워크, 데이터, 배포 권한의 환경별 분리 구조",
         recommendation="운영과 개발 환경의 계정, 네트워크, 데이터, 배포 권한을 분리하고 운영 데이터 반출을 통제하세요.",
     ),
@@ -229,6 +245,7 @@ SECURITY_CHECKS: tuple[SecurityCheck, ...] = (
         title="중요 보안 설정 변경에 대한 승인 절차가 존재한다.",
         weight=3,
         severity="Medium",
+        remediation_phase="운영 개선",
         evidence_hint="변경 승인 기록, 접근 권한 변경 이력, 보안 설정 변경 티켓",
         recommendation="방화벽, IAM, 암호화, 로깅 같은 핵심 보안 설정 변경은 승인, 기록, 사후 검토 절차를 거치게 하세요.",
     ),
@@ -308,6 +325,7 @@ def generate_recommendations(selected_ids: Iterable[str]) -> list[Recommendation
             "category": check.category,
             "item": check.title,
             "severity": check.severity,
+            "remediation_phase": check.remediation_phase,
             "weight": check.weight,
             "evidence_hint": check.evidence_hint,
             "recommendation": check.recommendation,
