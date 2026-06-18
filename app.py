@@ -82,7 +82,7 @@ def configure_page() -> None:
         }
         .status-strip {
             display: grid;
-            grid-template-columns: repeat(4, minmax(0, 1fr));
+            grid-template-columns: repeat(5, minmax(0, 1fr));
             gap: 0.7rem;
             margin: 1rem 0 1.2rem;
         }
@@ -378,6 +378,10 @@ def render_header(metadata: dict[str, str | date]) -> None:
             <div class='strip-item'>
                 <div class='strip-label'>Scope</div>
                 <div class='strip-value'>{metadata['assessment_scope']}</div>
+            </div>
+            <div class='strip-item'>
+                <div class='strip-label'>Risk Appetite</div>
+                <div class='strip-value'>{metadata['risk_appetite']}</div>
             </div>
             <div class='strip-item'>
                 <div class='strip-label'>Assessment Date</div>
