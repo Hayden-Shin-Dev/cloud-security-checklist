@@ -444,7 +444,8 @@ def render_sidebar() -> dict[str, str | date]:
     """Render assessment controls and return metadata."""
 
     with st.sidebar:
-        st.header("Assessment Setup")
+        st.header("점검 설정")
+        st.subheader("대상 정보")
         organization_name = st.text_input(
             "회사명 또는 프로젝트명",
             placeholder="예: ABC Cloud Migration",
@@ -465,7 +466,7 @@ def render_sidebar() -> dict[str, str | date]:
         st.caption(f"점검일: {checked_date.isoformat()}")
 
         st.divider()
-        st.subheader("Bulk Actions")
+        st.subheader("점검 제어")
         select_col, reset_col = st.columns(2)
         with select_col:
             if st.button("전체 선택", use_container_width=True):
